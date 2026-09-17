@@ -28,6 +28,21 @@ from utils import (  # noqa: E402
 
 
 LAB1_TOPOLOGY_PATH = ROOT / "build_api" / "lab1-start" / "topology.json"
+LAB1_COMPLETE_TOPOLOGY_PATH = (
+    ROOT / "build_api" / "lab1-complete" / "topology.json"
+)
+LAB2_STARTER_TOPOLOGY_PATH = (
+    ROOT / "build_api" / "lab2-starter" / "topology.json"
+)
+LAB2_COMPLETE_TOPOLOGY_PATH = (
+    ROOT / "build_api" / "lab2-complete" / "topology.json"
+)
+LAB3_START_TOPOLOGY_PATH = (
+    ROOT / "build_api" / "lab3-start" / "topology.json"
+)
+LAB3_COMPLETE_TOPOLOGY_PATH = (
+    ROOT / "build_api" / "lab3-complete" / "topology.json"
+)
 
 
 class FakeGNS3Client:
@@ -136,6 +151,196 @@ class ScriptedTelnet:
 
 
 class TopologyValidationTests(unittest.TestCase):
+    def test_lab3_complete_uses_requested_complete_web_template(self):
+        _, topology = load_topology(LAB3_COMPLETE_TOPOLOGY_PATH)
+        nodes = {node["name"]: node for node in topology["nodes"]}
+
+        self.assertEqual("Lab3_XSS_CSRF_Complete", topology["project"]["name"])
+        self.assertEqual(10, len(nodes))
+        self.assertEqual(9, len(topology["links"]))
+        self.assertEqual(
+            "web-server-lab3-complete",
+            topology["templates"][nodes["web-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "dns-server-lab3-complete",
+            topology["templates"][nodes["dns-server"]["template"]]["name"],
+        )
+
+        with (ROOT / "local_templates.json").open("r", encoding="utf-8") as file:
+            available = json.load(file)
+        resolved = _resolve_templates(topology, available)
+        self.assertEqual(
+            "d160fead-44f2-4133-abb0-c1d528361232",
+            resolved["web_server"]["template_id"],
+        )
+        self.assertEqual(
+            "59993670-3928-41c2-98fa-f0bf4061d7a5",
+            resolved["dns_server"]["template_id"],
+        )
+
+    def test_lab3_start_uses_requested_templates_and_lab2_complete_baseline(self):
+        _, topology = load_topology(LAB3_START_TOPOLOGY_PATH)
+        nodes = {node["name"]: node for node in topology["nodes"]}
+
+        self.assertEqual("Lab3_XSS_CSRF_Start", topology["project"]["name"])
+        self.assertEqual(10, len(nodes))
+        self.assertEqual(9, len(topology["links"]))
+        self.assertEqual(
+            "web-server-lab3-vulnerable",
+            topology["templates"][nodes["web-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "dns-server-lab3-complete",
+            topology["templates"][nodes["dns-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "client-lab1-complete",
+            topology["templates"][nodes["client1"]["template"]]["name"],
+        )
+
+        with (ROOT / "local_templates.json").open("r", encoding="utf-8") as file:
+            available = json.load(file)
+        resolved = _resolve_templates(topology, available)
+        self.assertEqual(
+            "7fb413cc-3e0f-4a1c-8051-507098651341",
+            resolved["web_server"]["template_id"],
+        )
+        self.assertEqual(
+            "59993670-3928-41c2-98fa-f0bf4061d7a5",
+            resolved["dns_server"]["template_id"],
+        )
+
+    def test_lab3_start_restores_dns_paths_and_vulnerable_web_services(self):
+        config_dir = LAB3_START_TOPOLOGY_PATH.parent / "configs"
+        client1 = (config_dir / "client1.cfg").read_text(encoding="utf-8")
+        client2 = (config_dir / "client2.cfg").read_text(encoding="utf-8")
+        dns_server = (config_dir / "dns-server.cfg").read_text(encoding="utf-8")
+        web_server = (config_dir / "web-server.cfg").read_text(encoding="utf-8")
+
+        self.assertIn("nameserver 127.0.0.1", client1)
+        self.assertIn("dnsmasq", client1)
+        self.assertIn("nameserver 10.10.20.10", client2)
+        self.assertIn("named", dns_server)
+        self.assertIn("/opt/exp3/start-exp3.sh", web_server)
+
+    def test_lab2_complete_uses_required_complete_templates(self):
+        _, topology = load_topology(LAB2_COMPLETE_TOPOLOGY_PATH)
+        nodes = {node["name"]: node for node in topology["nodes"]}
+
+        self.assertEqual("Lab2_HTTPS_Complete", topology["project"]["name"])
+        self.assertEqual(10, len(nodes))
+        self.assertEqual(9, len(topology["links"]))
+        self.assertEqual(
+            "web-server-lab2-complete",
+            topology["templates"][nodes["web-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "dns-server-lab2-complete",
+            topology["templates"][nodes["dns-server"]["template"]]["name"],
+        )
+
+        with (ROOT / "local_templates.json").open("r", encoding="utf-8") as file:
+            available = json.load(file)
+        resolved = _resolve_templates(topology, available)
+        self.assertEqual(
+            "5d045fd1-588d-4609-8be3-df1656f1a62c",
+            resolved["web_server"]["template_id"],
+        )
+        self.assertEqual(
+            "b248957c-8ee0-4a1d-bfe6-d7f46c26bcaf",
+            resolved["dns_server"]["template_id"],
+        )
+
+    def test_lab2_starter_uses_required_templates_and_lab1_baseline(self):
+        _, topology = load_topology(LAB2_STARTER_TOPOLOGY_PATH)
+        nodes = {node["name"]: node for node in topology["nodes"]}
+
+        self.assertEqual("Lab2_HTTPS_Starter", topology["project"]["name"])
+        self.assertEqual(10, len(nodes))
+        self.assertEqual(9, len(topology["links"]))
+        self.assertEqual(
+            "web-server-lab2-no-https",
+            topology["templates"][nodes["web-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "dns-server-lab2-complete",
+            topology["templates"][nodes["dns-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "client-lab1-complete",
+            topology["templates"][nodes["client1"]["template"]]["name"],
+        )
+
+        with (ROOT / "local_templates.json").open("r", encoding="utf-8") as file:
+            available = json.load(file)
+        resolved = _resolve_templates(topology, available)
+        self.assertEqual(
+            "6a0da828-1b65-4220-88d8-51b64a7b677f",
+            resolved["web_server"]["template_id"],
+        )
+        self.assertEqual(
+            "b248957c-8ee0-4a1d-bfe6-d7f46c26bcaf",
+            resolved["dns_server"]["template_id"],
+        )
+
+    def test_lab2_starter_preserves_dns_paths(self):
+        config_dir = LAB2_STARTER_TOPOLOGY_PATH.parent / "configs"
+        client1 = (config_dir / "client1.cfg").read_text(encoding="utf-8")
+        client2 = (config_dir / "client2.cfg").read_text(encoding="utf-8")
+        dns_server = (config_dir / "dns-server.cfg").read_text(encoding="utf-8")
+
+        self.assertIn("nameserver 127.0.0.1", client1)
+        self.assertIn("dnsmasq", client1)
+        self.assertIn("nameserver 10.10.20.10", client2)
+        self.assertIn("named", dns_server)
+        self.assertNotIn("networking-experiments.nju-slab.cn", dns_server)
+
+    def test_lab1_complete_uses_selected_complete_templates(self):
+        _, topology = load_topology(LAB1_COMPLETE_TOPOLOGY_PATH)
+        nodes = {node["name"]: node for node in topology["nodes"]}
+
+        self.assertEqual("Lab1_Web_DNS_Complete", topology["project"]["name"])
+        self.assertEqual(
+            "client-lab1-complete",
+            topology["templates"][nodes["client1"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "web-server-lab1-complete",
+            topology["templates"][nodes["web-server"]["template"]]["name"],
+        )
+        self.assertEqual(
+            "dns-server-lab1-complete",
+            topology["templates"][nodes["dns-server"]["template"]]["name"],
+        )
+        self.assertEqual("client", nodes["administrator"]["template"])
+        self.assertEqual("client", nodes["client2"]["template"])
+
+        with (ROOT / "local_templates.json").open("r", encoding="utf-8") as file:
+            available = json.load(file)
+        resolved = _resolve_templates(topology, available)
+        self.assertEqual(
+            {
+                "client_complete": "4446a559-4668-44ad-be34-4954bb89d04d",
+                "web_server": "5f3ecea0-61ba-4b37-a740-b60e2e0603df",
+                "dns_server": "705c84f8-b08e-4cf2-b68a-587b3be5eaad",
+            },
+            {
+                alias: resolved[alias]["template_id"]
+                for alias in ("client_complete", "web_server", "dns_server")
+            },
+        )
+
+    def test_lab1_complete_enables_client1_local_dns_cache(self):
+        config_dir = LAB1_COMPLETE_TOPOLOGY_PATH.parent / "configs"
+        client1 = (config_dir / "client1.cfg").read_text(encoding="utf-8")
+        client2 = (config_dir / "client2.cfg").read_text(encoding="utf-8")
+
+        self.assertIn("nameserver 127.0.0.1", client1)
+        self.assertIn("dnsmasq", client1)
+        self.assertIn("nameserver 10.10.20.10", client2)
+        self.assertNotIn("dnsmasq", client2)
+
     def test_duplicate_link_endpoint_is_rejected(self):
         _, topology = load_topology(LAB1_TOPOLOGY_PATH)
         invalid = copy.deepcopy(topology)

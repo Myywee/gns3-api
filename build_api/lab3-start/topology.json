@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Lab3_XSS_CSRF_Start",
+    "auto_start": true,
+    "stop_after_build": true
+  },
+  "templates": {
+    "nat": {"name": "NAT", "compute_id": "vm"},
+    "ethernet_switch": {"name": "Ethernet switch", "compute_id": "vm"},
+    "core_router": {"name": "Cisco IOSv", "compute_id": "vm"},
+    "client": {"name": "client-lab1-no-cache", "compute_id": "vm"},
+    "client_complete": {"name": "client-lab1-complete", "compute_id": "vm"},
+    "dns_server": {"name": "dns-server-lab3-complete", "compute_id": "vm"},
+    "web_server": {"name": "web-server-lab3-vulnerable", "compute_id": "vm"}
+  },
+  "nodes": [
+    {
+      "name": "nat",
+      "template": "nat",
+      "position": {"x": 0, "y": -300}
+    },
+    {
+      "name": "sw-server",
+      "template": "ethernet_switch",
+      "position": {"x": -350, "y": 0}
+    },
+    {
+      "name": "sw-mgmt",
+      "template": "ethernet_switch",
+      "position": {"x": 0, "y": 0}
+    },
+    {
+      "name": "sw-client",
+      "template": "ethernet_switch",
+      "position": {"x": 350, "y": 0}
+    },
+    {
+      "name": "core-router",
+      "template": "core_router",
+      "position": {"x": 0, "y": -150},
+      "config": {"driver": "ios", "file": "configs/core-router.cfg"}
+    },
+    {
+      "name": "dns-server",
+      "template": "dns_server",
+      "position": {"x": -475, "y": 175},
+      "config": {"driver": "docker_start", "file": "configs/dns-server.cfg"}
+    },
+    {
+      "name": "web-server",
+      "template": "web_server",
+      "position": {"x": -225, "y": 175},
+      "config": {"driver": "docker_start", "file": "configs/web-server.cfg"}
+    },
+    {
+      "name": "administrator",
+      "template": "client",
+      "position": {"x": 0, "y": 175},
+      "config": {"driver": "docker_start", "file": "configs/administrator.cfg"}
+    },
+    {
+      "name": "client1",
+      "template": "client_complete",
+      "position": {"x": 225, "y": 175},
+      "config": {"driver": "docker_start", "file": "configs/client1.cfg"}
+    },
+    {
+      "name": "client2",
+      "template": "client",
+      "position": {"x": 475, "y": 175},
+      "config": {"driver": "docker_start", "file": "configs/client2.cfg"}
+    }
+  ],
+  "links": [
+    {
+      "endpoints": [
+        {"node": "nat", "adapter": 0, "port": 0},
+        {"node": "core-router", "adapter": 3, "port": 0}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "core-router", "adapter": 0, "port": 0},
+        {"node": "sw-server", "adapter": 0, "port": 0}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "core-router", "adapter": 1, "port": 0},
+        {"node": "sw-mgmt", "adapter": 0, "port": 0}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "core-router", "adapter": 2, "port": 0},
+        {"node": "sw-client", "adapter": 0, "port": 0}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "dns-server", "adapter": 0, "port": 0},
+        {"node": "sw-server", "adapter": 0, "port": 1}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "web-server", "adapter": 0, "port": 0},
+        {"node": "sw-server", "adapter": 0, "port": 2}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "administrator", "adapter": 0, "port": 0},
+        {"node": "sw-mgmt", "adapter": 0, "port": 1}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "client1", "adapter": 0, "port": 0},
+        {"node": "sw-client", "adapter": 0, "port": 1}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "client2", "adapter": 0, "port": 0},
+        {"node": "sw-client", "adapter": 0, "port": 2}
+      ]
+    }
+  ]
+}
