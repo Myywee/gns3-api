@@ -32,7 +32,7 @@ LAB1_COMPLETE_TOPOLOGY_PATH = (
     ROOT / "build_api" / "lab1-complete" / "topology.json"
 )
 LAB2_STARTER_TOPOLOGY_PATH = (
-    ROOT / "build_api" / "lab2-starter" / "topology.json"
+    ROOT / "build_api" / "lab2-start" / "topology.json"
 )
 LAB2_COMPLETE_TOPOLOGY_PATH = (
     ROOT / "build_api" / "lab2-complete" / "topology.json"

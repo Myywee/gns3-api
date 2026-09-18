@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Lab6_TCP_UDP_Socket_Echo",
+    "auto_start": true,
+    "stop_after_build": true
+  },
+  "templates": {
+    "client": {"name": "client-lab6-complete", "compute_id": "vm"},
+    "router": {"name": "Cisco IOSv", "compute_id": "vm"},
+    "server": {"name": "server-lab6-complete", "compute_id": "vm"}
+  },
+  "nodes": [
+    {
+      "name": "client",
+      "template": "client",
+      "position": {"x": -300, "y": 0},
+      "config": {"driver": "docker_start", "file": "configs/client.cfg"}
+    },
+    {
+      "name": "Router",
+      "template": "router",
+      "position": {"x": 0, "y": 0}
+    },
+    {
+      "name": "server",
+      "template": "server",
+      "position": {"x": 300, "y": 0},
+      "config": {"driver": "docker_start", "file": "configs/server.cfg"}
+    }
+  ],
+  "links": [
+    {
+      "endpoints": [
+        {"node": "client", "adapter": 0, "port": 0},
+        {"node": "Router", "adapter": 0, "port": 0}
+      ]
+    },
+    {
+      "endpoints": [
+        {"node": "Router", "adapter": 1, "port": 0},
+        {"node": "server", "adapter": 0, "port": 0}
+      ]
+    }
+  ]
+}

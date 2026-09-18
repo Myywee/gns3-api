@@ -34,4 +34,4 @@ IOS 配置会逐条等待设备提示符并检查错误，随后使用
 
 新增实验时复制目录结构并修改 JSON/配置文件即可，通用构建器本身无需修改。
 
-实验一的初始态和完成态分别见 `lab1-start/README.md` 与 `lab1-complete/README.md`；实验二初始态和完成态分别见 `lab2-starter/README.md` 与 `lab2-complete/README.md`；实验三初始态和完成态分别见 `lab3-start/README.md` 与 `lab3-complete/README.md`。实验目录不包含实验专用 Python 入口，统一通过外层 `topology_build.py` 操作。
+实验一的初始态和完成态分别见 `lab1-start/README.md` 与 `lab1-complete/README.md`；实验二初始态和完成态分别见 `lab2-start/README.md` 与 `lab2-complete/README.md`；实验三初始态和完成态分别见 `lab3-start/README.md` 与 `lab3-complete/README.md`。实验目录不包含实验专用 Python 入口，统一通过外层 `topology_build.py` 操作。
